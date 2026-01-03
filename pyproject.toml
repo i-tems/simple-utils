@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "simple-utils"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A collection of simple Python utilities for datetime, string, file, and decorator operations"
 readme = "README.md"
 license = "MIT"
@@ -39,3 +39,9 @@ include = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/simple_utils"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/simple_utils/_version.py"
