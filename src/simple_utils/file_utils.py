@@ -258,7 +258,6 @@ def get_parent(filepath: Union[str, Path]) -> Path:
     """
     return Path(filepath).parent
 
-
 def list_files(
     dirpath: Union[str, Path],
     pattern: str = "*",

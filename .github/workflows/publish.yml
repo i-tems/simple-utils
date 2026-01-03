@@ -34,6 +34,9 @@ jobs:
         id: bump
         if: steps.check.outputs.should_release == 'true'
         run: |
+          # Fetch all tags from remote
+          git fetch --tags
+
           # Get latest tag, default to 1.999.999 if none exists (so first version becomes 2.0.0)
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.999.999")
           VERSION=${LATEST_TAG#v}
@@ -53,9 +56,16 @@ jobs:
           PATCH=$((PATCH + 1))
 
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "should_release=true" >> $GITHUB_OUTPUT
-          echo "Bumping version: $VERSION -> $NEW_VERSION"
+
+          # Check if tag already exists
+          if git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
+            echo "Tag v$NEW_VERSION already exists, skipping release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "Bumping version: $VERSION -> $NEW_VERSION"
+          fi
 
       - name: Create and push tag
         if: steps.bump.outputs.should_release == 'true'
