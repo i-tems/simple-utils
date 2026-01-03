@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
+
 def read_text(filepath: Union[str, Path], encoding: str = "utf-8") -> str:
     """
     Read a text file and return its contents.
@@ -257,6 +258,7 @@ def get_parent(filepath: Union[str, Path]) -> Path:
         Parent directory as a Path object
     """
     return Path(filepath).parent
+
 
 def list_files(
     dirpath: Union[str, Path],
