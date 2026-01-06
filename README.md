@@ -15,6 +15,7 @@ pip install simple-utils
 - **File Utils**: 파일 및 경로 처리 유틸리티
 - **Decorators**: retry, timing 등 유용한 데코레이터
 - **Object Storage**: 파일 기반 객체 저장소
+- **Iceberg Client**: Trino를 통한 Iceberg 테이블 인터페이스
 
 ## 사용법
 
@@ -141,6 +142,164 @@ dirs = storage.list_dirs()
 - `exists(key)`: 파일 존재 여부 확인
 - `list_keys(prefix)`: (옵션) prefix로 시작하는 모든 파일 목록
 - `list_dirs()`: 하위 디렉토리 목록
+
+### Iceberg Client
+
+Trino를 통해 Iceberg 테이블과 상호작용하는 클라이언트입니다. 스키마 관리, 테이블 CRUD, 데이터 조회/삽입/수정/삭제를 지원합니다.
+
+```bash
+pip install simple-utils[iceberg]
+```
+
+```python
+from simple_utils.storage import IcebergClient
+
+# 클라이언트 생성
+client = IcebergClient(
+    host="localhost",
+    port=7170,
+    catalog="local",
+    schema="data_product"
+)
+
+# 또는 context manager 사용
+with IcebergClient(host="localhost", port=7170) as client:
+    tables = client.list_tables()
+```
+
+#### 스키마 작업
+
+```python
+# 스키마 목록 조회
+schemas = client.list_schemas()
+
+# 스키마 생성
+client.create_schema("my_schema")
+
+# 스키마 삭제
+client.drop_schema("my_schema")
+```
+
+#### 테이블 작업
+
+```python
+# 테이블 목록 조회
+tables = client.list_tables()
+
+# 테이블 존재 여부 확인
+exists = client.table_exists("users")
+
+# 테이블 생성
+client.create_table("users", {
+    "id": "VARCHAR",
+    "name": "VARCHAR",
+    "age": "INTEGER",
+    "created_at": "TIMESTAMP"
+})
+
+# 파티션 테이블 생성
+client.create_table("events", {
+    "event_id": "VARCHAR",
+    "event_date": "DATE",
+    "data": "VARCHAR"
+}, partitioned_by=["event_date"])
+
+# 테이블 구조 조회
+columns = client.describe_table("users")
+# [{'name': 'id', 'type': 'varchar', 'nullable': True}, ...]
+
+# 테이블 삭제
+client.drop_table("users")
+```
+
+#### 데이터 조회
+
+```python
+# 전체 조회
+rows = client.query("users")
+
+# 특정 컬럼만 조회
+rows = client.query("users", columns=["id", "name"])
+
+# 조건부 조회
+rows = client.query("users", where="age >= 20")
+
+# 정렬 및 제한
+rows = client.query("users", order_by="created_at DESC", limit=10)
+
+# 복합 조회
+rows = client.query(
+    "users",
+    columns=["id", "name"],
+    where="age >= 20",
+    order_by="name ASC",
+    limit=100
+)
+
+# 행 수 조회
+count = client.count("users")
+count = client.count("users", where="age >= 20")
+
+# 원시 SQL 실행
+rows = client.query_sql("""
+    SELECT u.name, COUNT(*) as order_count
+    FROM users u
+    JOIN orders o ON u.id = o.user_id
+    GROUP BY u.name
+""")
+```
+
+#### 데이터 삽입
+
+```python
+# 단일 행 삽입
+client.insert("users", {"id": "1", "name": "홍길동", "age": 30})
+
+# 다중 행 삽입
+client.insert("users", [
+    {"id": "2", "name": "김철수", "age": 25},
+    {"id": "3", "name": "이영희", "age": 28}
+])
+
+# 대용량 배치 삽입 (100건씩 분할)
+client.insert_batch("users", large_data_list, batch_size=100)
+```
+
+#### 데이터 수정/삭제
+
+```python
+# 행 업데이트
+client.update("users", {"age": 31}, where="id = '1'")
+
+# 조건부 삭제
+client.delete("users", where="age < 18")
+
+# 전체 삭제 (truncate)
+client.truncate("users")
+```
+
+#### 주요 메서드
+
+| 메서드 | 설명 |
+|--------|------|
+| `list_schemas()` | 카탈로그의 모든 스키마 조회 |
+| `create_schema(name)` | 스키마 생성 |
+| `drop_schema(name)` | 스키마 삭제 |
+| `list_tables()` | 스키마의 모든 테이블 조회 |
+| `table_exists(name)` | 테이블 존재 여부 확인 |
+| `create_table(name, columns)` | 테이블 생성 |
+| `drop_table(name)` | 테이블 삭제 |
+| `describe_table(name)` | 테이블 컬럼 정보 조회 |
+| `query(table, ...)` | 테이블 데이터 조회 |
+| `query_sql(sql)` | 원시 SQL 실행 |
+| `count(table)` | 행 수 조회 |
+| `insert(table, data)` | 데이터 삽입 |
+| `insert_batch(table, data)` | 배치 삽입 |
+| `update(table, values, where)` | 데이터 수정 |
+| `delete(table, where)` | 데이터 삭제 |
+| `truncate(table)` | 테이블 전체 삭제 |
+| `execute(sql)` | SQL 직접 실행 |
+| `close()` | 연결 종료 |
 
 ## 라이선스
 

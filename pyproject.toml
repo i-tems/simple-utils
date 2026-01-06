@@ -48,6 +48,7 @@ version-file = "src/simple_utils/_version.py"
 
 [project.optional-dependencies]
 test = ["pytest>=7.0"]
+iceberg = ["trino>=0.327"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
