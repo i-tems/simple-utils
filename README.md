@@ -1,74 +1,149 @@
 # simple-utils
 
-일상적인 작업을 위한 간단한 파이썬 유틸리티 모음입니다.
+날짜/시간, 문자열, 파일, 데코레이터 등 다양한 Python 유틸리티 모음입니다.
 
-## 설치 방법
+## 설치
 
 ```bash
 pip install simple-utils
 ```
 
-## 주요 기능
+### 선택적 의존성
 
-- **DateTime Utils**: 날짜 및 시간 처리 유틸리티
-- **String Utils**: 문자열 처리 유틸리티
-- **File Utils**: 파일 및 경로 처리 유틸리티
-- **Decorators**: retry, timing 등 유용한 데코레이터
-- **Object Storage**: 파일 기반 객체 저장소
-- **Iceberg Client**: Trino를 통한 Iceberg 테이블 인터페이스
+```bash
+# Iceberg 지원
+pip install simple-utils[iceberg]
+```
+
+## 모듈
+
+- **datetime_utils** - 날짜 및 시간 연산
+- **string_utils** - 문자열 변환 및 조작
+- **file_utils** - 파일 및 경로 작업
+- **decorators** - 유용한 함수 데코레이터
+- **storage** - 객체 저장소 유틸리티
+- **platform** - 플랫폼 연동 (Iceberg, DuckDB)
 
 ## 사용법
 
-### DateTime Utils
+### DateTime Utilities
 
 ```python
 from simple_utils import datetime_utils
 
-# 현재 타임스탬프 가져오기
+# 현재 날짜/시간
+now = datetime_utils.now()
+today = datetime_utils.today()
+
+# 타임스탬프
 ts = datetime_utils.now_timestamp()
+ts_ms = datetime_utils.now_timestamp_ms()
 
-# 날짜 문자열 파싱
-dt = datetime_utils.parse_date("2024-01-15")
+# 파싱 및 포맷
+date = datetime_utils.parse_date("2024-01-15")
+dt = datetime_utils.parse_datetime("2024-01-15 10:30:00")
+formatted = datetime_utils.format_date(date, "%Y/%m/%d")
 
-# datetime 포맷팅
-formatted = datetime_utils.format_datetime(dt, "%Y/%m/%d")
+# 날짜 연산
+dates = datetime_utils.date_range("2024-01-01", "2024-01-10")
+days = datetime_utils.days_between("2024-01-01", "2024-01-10")
+new_date = datetime_utils.add_days("2024-01-01", 7)
 
-# 날짜 범위 구하기
-dates = datetime_utils.date_range("2024-01-01", "2024-01-07")
+# 하루의 시작/끝
+start = datetime_utils.start_of_day()
+end = datetime_utils.end_of_day()
+
+# 주말 확인
+is_weekend = datetime_utils.is_weekend("2024-01-13")  # True (토요일)
+
+# 타임스탬프 변환
+dt = datetime_utils.timestamp_to_datetime(1705312200)
+ts = datetime_utils.datetime_to_timestamp(dt)
 ```
 
-### String Utils
+### String Utilities
 
 ```python
-
 from simple_utils import string_utils
 
 # 케이스 변환
-snake = string_utils.to_snake_case("HelloWorld")  # "hello_world"
-camel = string_utils.to_camel_case("hello_world")  # "helloWorld"
-pascal = string_utils.to_pascal_case("hello_world")  # "HelloWorld"
+string_utils.to_snake_case("HelloWorld")      # "hello_world"
+string_utils.to_camel_case("hello_world")     # "helloWorld"
+string_utils.to_pascal_case("hello_world")    # "HelloWorld"
+string_utils.to_kebab_case("HelloWorld")      # "hello-world"
 
-# 문자열 자르기
-truncated = string_utils.truncate("Hello World", 8)  # "Hello..."
+# 문자열 연산
+string_utils.truncate("Hello World", 8)        # "Hello..."
+string_utils.slugify("Hello World!")           # "hello-world"
+string_utils.reverse("hello")                  # "olleh"
 
-# 랜덤 문자열 생성
-random_str = string_utils.random_string(10)
+# 랜덤 문자열
+string_utils.random_string(16)                 # "aB3xKm9pQr2sT5vW"
+string_utils.random_hex(8)                     # "a1b2c3d4"
+
+# 검사
+string_utils.is_empty("")                      # True
+string_utils.is_not_empty("hello")             # True
+string_utils.contains_any("hello", ["he", "x"]) # True
+string_utils.contains_all("hello", ["he", "lo"]) # True
+
+# 접두사/접미사 제거
+string_utils.remove_prefix("prefix_text", "prefix_")  # "text"
+string_utils.remove_suffix("text_suffix", "_suffix")  # "text"
+
+# 마스킹
+string_utils.mask("1234567890", 2, 2)          # "12******90"
+
+# 추출
+string_utils.extract_numbers("abc123def456")   # ["123", "456"]
+string_utils.split_words("helloWorld")         # ["hello", "world"]
 ```
 
-### File Utils
+### File Utilities
 
 ```python
 from simple_utils import file_utils
 
-# JSON 읽기/쓰기
-data = file_utils.read_json("config.json")
-file_utils.write_json("output.json", data)
+# 텍스트 파일
+content = file_utils.read_text("file.txt")
+file_utils.write_text("file.txt", "content")
 
-# 디렉토리 생성 보장
-file_utils.ensure_dir("/path/to/directory")
+lines = file_utils.read_lines("file.txt")
+file_utils.write_lines("file.txt", ["line1", "line2"])
 
-# 파일 확장자 얻기
-ext = file_utils.get_extension("document.pdf")  # ".pdf"
+# JSON 파일
+data = file_utils.read_json("data.json")
+file_utils.write_json("data.json", {"key": "value"})
+
+# 바이너리 파일
+bytes_data = file_utils.read_bytes("file.bin")
+file_utils.write_bytes("file.bin", b"binary data")
+
+# 디렉토리 작업
+file_utils.ensure_dir("path/to/dir")
+file_utils.ensure_parent_dir("path/to/file.txt")
+files = file_utils.list_files("dir", "*.py", recursive=True)
+
+# 파일 정보
+file_utils.exists("file.txt")
+file_utils.is_file("file.txt")
+file_utils.is_dir("directory")
+file_utils.get_extension("file.txt")     # ".txt"
+file_utils.get_stem("file.txt")          # "file"
+file_utils.get_name("path/to/file.txt")  # "file.txt"
+file_utils.get_parent("path/to/file.txt") # Path("path/to")
+file_utils.get_size("file.txt")          # 바이트 크기
+file_utils.get_size_human("file.txt")    # "1.5 MB"
+
+# 파일 작업
+file_utils.copy_file("src.txt", "dst.txt")
+file_utils.move_file("src.txt", "dst.txt")
+file_utils.delete_file("file.txt")
+file_utils.delete_dir("directory")
+
+# 경로 유틸리티
+path = file_utils.join_path("path", "to", "file.txt")
+abs_path = file_utils.resolve_path("./file.txt")
 ```
 
 ### Decorators
@@ -76,231 +151,98 @@ ext = file_utils.get_extension("document.pdf")  # ".pdf"
 ```python
 from simple_utils import decorators
 
-# 재시도 데코레이터
-@decorators.retry(max_attempts=3, delay=1.0)
+# 지수 백오프 재시도
+@decorators.retry(max_attempts=3, delay=1.0, backoff=2.0)
 def unstable_function():
-    # 가끔 실패할 수 있음
-    pass
+    ...
 
-# 실행 시간 측정 데코레이터
+# 실행 시간 측정
 @decorators.timing
 def slow_function():
-    # 시간이 오래 걸리는 함수
-    pass
+    ...
 
-# 결과 캐싱 데코레이터
+# 결과 캐싱
 @decorators.memoize
-def expensive_calculation(x):
-    return x ** 2
+def expensive_function(x):
+    ...
+
+# 지원 중단 표시
+@decorators.deprecated(message="new_func을 사용하세요", version="2.0")
+def old_function():
+    ...
+
+# 싱글톤 패턴
+@decorators.singleton
+class Database:
+    ...
+
+# 호출 제한
+@decorators.throttle(interval=1.0)  # 초당 최대 1회
+def rate_limited_function():
+    ...
+
+@decorators.debounce(wait=0.5)      # 마지막 호출 후 0.5초 대기
+def debounced_function():
+    ...
+
+# 로깅
+@decorators.log_calls(log_args=True, log_result=True)
+def logged_function(x, y):
+    ...
+
+# 에러 처리
+@decorators.catch_exceptions(default=None, exceptions=(ValueError,))
+def safe_function():
+    ...
+
+# 1회만 실행
+@decorators.run_once
+def initialize():
+    ...
+
+# 인자 검증
+@decorators.validate_args(x=lambda x: x > 0, name=lambda s: len(s) > 0)
+def validated_function(x, name):
+    ...
 ```
 
 ### Object Storage
 
-파일 기반의 간단한 객체 저장소로, 텍스트, JSON, 바이너리 데이터를 키 기반으로 저장/조회/삭제할 수 있습니다.
-
 ```python
 from simple_utils.storage import ObjectStorage
 
-# 저장소 인스턴스 생성 (예: ./data 디렉토리)
-storage = ObjectStorage("./data")
+# 스토리지 초기화
+storage = ObjectStorage("/path/to/storage")
 
-# 텍스트 저장 및 읽기
-storage.write("hello.txt", "안녕하세요!")
-print(storage.read_text("hello.txt"))  # '안녕하세요!'
+# 데이터 쓰기
+storage.write("config.json", {"key": "value"})
+storage.write("data.txt", "텍스트 내용")
+storage.write("binary.bin", b"바이너리 데이터")
 
-# JSON 저장 및 읽기
-storage.write("user.json", {"name": "홍길동", "age": 30})
-user = storage.read("user.json")  # {'name': '홍길동', 'age': 30}
+# 데이터 읽기
+data = storage.read("config.json")       # JSON 자동 파싱
+text = storage.read_text("data.txt")
+binary = storage.read_bytes("binary.bin")
 
-# 바이너리 데이터 저장 및 읽기
-storage.write("image.bin", b"\x00\x01\x02")
-data = storage.read_bytes("image.bin")
+# 확인 및 목록
+storage.exists("config.json")            # True
+storage.list_keys()                       # ["config.json", "data.txt", ...]
+storage.list_keys(prefix="config")        # ["config.json"]
+storage.list_dirs()                       # 하위 디렉토리 목록
 
-# 파일 존재 여부 확인
-exists = storage.exists("user.json")
-
-# 파일 삭제
-storage.delete("hello.txt")
-
-# 저장소 내 모든 파일(키) 목록 조회
-all_keys = storage.list_keys()
-
-# 특정 폴더 내 파일 목록 조회
-sub_keys = storage.list_keys("images/")
-
-# 하위 디렉토리 목록 조회
-dirs = storage.list_dirs()
+# 삭제
+storage.delete("config.json")
 ```
 
-#### 주요 메서드
+### Platform 연동
 
-- `write(key, data)`: 텍스트, JSON(dict/list), 바이너리(bytes) 저장
-- `read(key)`: 텍스트 또는 JSON 자동 판별하여 읽기
-- `read_text(key)`: 텍스트로 읽기
-- `read_bytes(key)`: 바이너리로 읽기
-- `delete(key)`: 파일 삭제
-- `exists(key)`: 파일 존재 여부 확인
-- `list_keys(prefix)`: (옵션) prefix로 시작하는 모든 파일 목록
-- `list_dirs()`: 하위 디렉토리 목록
+- [Iceberg 사용 가이드](docs/iceberg.md) - Apache Iceberg 카탈로그 연동
+- [DuckDB 사용 가이드](docs/duckdb.md) - Iceberg 지원 DuckDB 연동
 
-### Iceberg Client
+## 요구사항
 
-Trino를 통해 Iceberg 테이블과 상호작용하는 클라이언트입니다. 스키마 관리, 테이블 CRUD, 데이터 조회/삽입/수정/삭제를 지원합니다.
-
-```bash
-pip install simple-utils[iceberg]
-```
-
-```python
-from simple_utils.storage import IcebergClient
-
-# 클라이언트 생성
-client = IcebergClient(
-    host="localhost",
-    port=7170,
-    catalog="local",
-    schema="data_product"
-)
-
-# 또는 context manager 사용
-with IcebergClient(host="localhost", port=7170) as client:
-    tables = client.list_tables()
-```
-
-#### 스키마 작업
-
-```python
-# 스키마 목록 조회
-schemas = client.list_schemas()
-
-# 스키마 생성
-client.create_schema("my_schema")
-
-# 스키마 삭제
-client.drop_schema("my_schema")
-```
-
-#### 테이블 작업
-
-```python
-# 테이블 목록 조회
-tables = client.list_tables()
-
-# 테이블 존재 여부 확인
-exists = client.table_exists("users")
-
-# 테이블 생성
-client.create_table("users", {
-    "id": "VARCHAR",
-    "name": "VARCHAR",
-    "age": "INTEGER",
-    "created_at": "TIMESTAMP"
-})
-
-# 파티션 테이블 생성
-client.create_table("events", {
-    "event_id": "VARCHAR",
-    "event_date": "DATE",
-    "data": "VARCHAR"
-}, partitioned_by=["event_date"])
-
-# 테이블 구조 조회
-columns = client.describe_table("users")
-# [{'name': 'id', 'type': 'varchar', 'nullable': True}, ...]
-
-# 테이블 삭제
-client.drop_table("users")
-```
-
-#### 데이터 조회
-
-```python
-# 전체 조회
-rows = client.query("users")
-
-# 특정 컬럼만 조회
-rows = client.query("users", columns=["id", "name"])
-
-# 조건부 조회
-rows = client.query("users", where="age >= 20")
-
-# 정렬 및 제한
-rows = client.query("users", order_by="created_at DESC", limit=10)
-
-# 복합 조회
-rows = client.query(
-    "users",
-    columns=["id", "name"],
-    where="age >= 20",
-    order_by="name ASC",
-    limit=100
-)
-
-# 행 수 조회
-count = client.count("users")
-count = client.count("users", where="age >= 20")
-
-# 원시 SQL 실행
-rows = client.query_sql("""
-    SELECT u.name, COUNT(*) as order_count
-    FROM users u
-    JOIN orders o ON u.id = o.user_id
-    GROUP BY u.name
-""")
-```
-
-#### 데이터 삽입
-
-```python
-# 단일 행 삽입
-client.insert("users", {"id": "1", "name": "홍길동", "age": 30})
-
-# 다중 행 삽입
-client.insert("users", [
-    {"id": "2", "name": "김철수", "age": 25},
-    {"id": "3", "name": "이영희", "age": 28}
-])
-
-# 대용량 배치 삽입 (100건씩 분할)
-client.insert_batch("users", large_data_list, batch_size=100)
-```
-
-#### 데이터 수정/삭제
-
-```python
-# 행 업데이트
-client.update("users", {"age": 31}, where="id = '1'")
-
-# 조건부 삭제
-client.delete("users", where="age < 18")
-
-# 전체 삭제 (truncate)
-client.truncate("users")
-```
-
-#### 주요 메서드
-
-| 메서드 | 설명 |
-|--------|------|
-| `list_schemas()` | 카탈로그의 모든 스키마 조회 |
-| `create_schema(name)` | 스키마 생성 |
-| `drop_schema(name)` | 스키마 삭제 |
-| `list_tables()` | 스키마의 모든 테이블 조회 |
-| `table_exists(name)` | 테이블 존재 여부 확인 |
-| `create_table(name, columns)` | 테이블 생성 |
-| `drop_table(name)` | 테이블 삭제 |
-| `describe_table(name)` | 테이블 컬럼 정보 조회 |
-| `query(table, ...)` | 테이블 데이터 조회 |
-| `query_sql(sql)` | 원시 SQL 실행 |
-| `count(table)` | 행 수 조회 |
-| `insert(table, data)` | 데이터 삽입 |
-| `insert_batch(table, data)` | 배치 삽입 |
-| `update(table, values, where)` | 데이터 수정 |
-| `delete(table, where)` | 데이터 삭제 |
-| `truncate(table)` | 테이블 전체 삭제 |
-| `execute(sql)` | SQL 직접 실행 |
-| `close()` | 연결 종료 |
+- Python >= 3.8
 
 ## 라이선스
 
-MIT License
+MIT
