@@ -8,7 +8,7 @@ class DuckDB():
     def connection(self):
         return self._connection
 
-    def connect(self):
+    def connect(self, endpoint="http://iceberg-rest:8181"):
         conn = duckdb.connect()
         conn.execute("INSTALL iceberg; LOAD iceberg;")
         conn.execute("""

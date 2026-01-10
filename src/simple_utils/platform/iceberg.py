@@ -3,7 +3,7 @@ from pyiceberg.catalog import load_catalog
 
 
 class Iceberg:
-    def __init__(self, iceberg_catalog_uri: str="http://localhost:8181"):
+    def __init__(self, iceberg_catalog_uri: str="http://iceberg-rest:8181"):
         self._catalog = load_catalog(
             "rest",
             **{
