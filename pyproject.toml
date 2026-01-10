@@ -26,6 +26,10 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+dependencies = [
+    "pyiceberg[pyarrow,pandas]>=0.10.0",
+    "duckdb>=1.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/i-tems/simple-utils"
@@ -48,7 +52,6 @@ version-file = "src/simple_utils/_version.py"
 
 [project.optional-dependencies]
 test = ["pytest>=7.0"]
-iceberg = ["pyiceberg[pyarrow,pandas]>=0.10.0", "duckdb>=1.0.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
