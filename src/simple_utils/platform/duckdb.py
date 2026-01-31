@@ -1,8 +1,8 @@
 import duckdb
 
 class DuckDB():
-    def __init__(self):
-        self._connection = self.connect()
+    def __init__(self, endpoint: str = "http://iceberg-rest:8181"):
+        self._connection = self.connect(endpoint)
 
     @property
     def connection(self):
