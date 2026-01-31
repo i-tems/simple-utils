@@ -128,14 +128,17 @@ class ObjectStorage:
         """
         return self._get_full_path(key).exists()
 
-    def list_dirs(self) -> List[str]:
+    def list_dirs(self, prefix: str = "") -> List[str]:
         """
         List immediate subdirectories in the storage root.
 
         Returns:
             List of directory names
         """
-        return [p.name for p in self._base_path.iterdir() if p.is_dir()]
+        base = self._base_path / prefix if prefix else self._base_path
+        if not base.exists():
+            return []
+        return [p.name for p in base.iterdir() if p.is_dir()]
 
     def list_keys(self, prefix: str = "") -> List[str]:
         """
